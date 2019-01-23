@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body onload="main()">
+
+
+<div id="message"></div>
+
+
+<style type="text/css">
+#message {
+	white-space: pre;
+}
+</style>
+
+
+<script type="text/javascript">
+
+function main() {
+	console.log('begin');
+
+	const connection = new WebSocket('ws://localhost:1337');
+	connection.onopen = () => {
+		console.log('websocket connection open');
+		connection.send(JSON.stringify({ text: 'hello' }));
+	};
+	connection.onerror = (error) => {
+		console.error('websocket connection error');
+	};
+	connection.onmessage = (message) => {
+		const mdata = JSON.parse(message.data);
+		console.log('message:', mdata.text);
+	};
+}
+	
+</script>
+
+
+</body>
+</html>
