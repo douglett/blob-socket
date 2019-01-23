@@ -6,12 +6,29 @@
 <body onload="main()">
 
 
-<div id="message"></div>
+<canvas id="mycanvas"></canvas>
+
+<div id="message">
+	<p>start</p>
+</div>
 
 
 <style type="text/css">
+#mycanvas {
+	width: 200px;
+	height: 200px;
+	border: 1px solid black;
+	image-rendering: pixelated;
+}
 #message {
-	white-space: pre;
+	/*white-space: pre;*/
+	border: 1px solid black;
+	padding: 10px;
+	margin-top: 5px;
+}
+#message p {
+	margin: 0;
+	margin-bottom: 0.5em;
 }
 </style>
 
@@ -20,20 +37,83 @@
 
 function main() {
 	console.log('begin');
+	server.startConnection();
+	draw.mainloop();
+}
 
-	const connection = new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}`);
-	connection.onopen = () => {
+
+
+// server connection management
+const server = new function() {
+	// vars
+	let connection = null;
+	let playerid = '';
+	let state = this.state = [
+		{ playerid: 'fred', color: 'red', x: 10, y: 10 },
+		{ playerid: 'bob', color: 'green', x: 20, y: 20 },
+	];
+
+	// methods
+	const onopen = () => {
 		console.log('websocket connection open');
 		connection.send(JSON.stringify({ text: 'hello' }));
 	};
-	connection.onerror = (error) => {
+	const onerror = (error) => {
 		console.error('websocket connection error');
 	};
-	connection.onmessage = (message) => {
+	const onmessage = (message) => {
 		const mdata = JSON.parse(message.data);
-		console.log('message:', mdata.text);
+		switch (mdata.type) {
+		case 'message':  console.log('message:', mdata.text);  break;
+		}
 	};
-}
+
+	this.startConnection = () => {
+		const socket = location.protocol === 'https:' ? 'wss' : 'ws';
+		connection = new WebSocket(`${socket}://${location.host}`);
+		// add event listeners
+		connection.onopen = onopen;
+		connection.onerror = onerror;
+		connection.onmessage = onmessage;
+	}
+};
+
+
+
+// canvas
+const draw = new function() {
+	// vars
+	const canvas = document.querySelector('#mycanvas');
+	const width = canvas.width = 50;
+	const height = canvas.height = 50;
+	const ctx = canvas.getContext('2d');
+
+	// drawing
+	this.paint = () => {
+		ctx.fillStyle = 'white';
+		ctx.fillRect(0, 0, width, height);
+		
+		server.state.forEach(p => {
+			ctx.fillStyle = p.color;
+			ctx.fillRect(p.x, p.y, 1, 1);
+		});
+	}
+
+	// events
+	window.addEventListener('keydown', (e) => {
+		switch (e.key) {
+		// case 'w':
+		case 's':  
+		default:  console.log(e.key);
+		}
+	});
+
+	// start main loop
+	this.mainloop = () => {
+		this.paint();
+		requestAnimationFrame(this.mainloop);
+	}
+};
 	
 </script>
 
