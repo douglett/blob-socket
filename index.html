@@ -21,7 +21,7 @@
 function main() {
 	console.log('begin');
 
-	const connection = new WebSocket(`ws://${location.host}`);
+	const connection = new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}`);
 	connection.onopen = () => {
 		console.log('websocket connection open');
 		connection.send(JSON.stringify({ text: 'hello' }));
