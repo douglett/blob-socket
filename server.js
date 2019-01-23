@@ -9,6 +9,7 @@ const FinalHandler = require('finalhandler');
 const ServeStatic = require('serve-static');
 
 
+const PORT = process.env.PORT || 8080;
 const clients = [];
 
 
@@ -36,7 +37,7 @@ const server = http.createServer((request, response) => {
 	let done = FinalHandler(request, response);
 	staticServer(request, response, done);
 });
-server.listen(1337, () => console.log(`${fdate()}  Listening on port 1337`));
+server.listen(PORT, () => console.log(`${fdate()}  Listening on port ${PORT}`));
 
 
 // websocket server
