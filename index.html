@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title></title>
+	<title>blob-socket</title>
 </head>
 <body onload="main()">
 
@@ -65,6 +65,7 @@ const server = new function() {
 		const mdata = JSON.parse(message.data);
 		switch (mdata.type) {
 		case 'message':  console.log('message:', mdata.text);  break;
+		case 'state':  state.splice(0);  mdata.state.forEach(d => state.push(d));  break;
 		}
 	};
 
@@ -75,7 +76,11 @@ const server = new function() {
 		connection.onopen = onopen;
 		connection.onerror = onerror;
 		connection.onmessage = onmessage;
-	}
+	};
+
+	this.send = (obj) => {
+		connection.send(JSON.stringify(obj));
+	};
 };
 
 
@@ -102,8 +107,14 @@ const draw = new function() {
 	// events
 	window.addEventListener('keydown', (e) => {
 		switch (e.key) {
-		// case 'w':
-		case 's':  
+		case 'w': case 'ArrowUp':
+			server.send({ type: 'move', dir: 'n' });  break;
+		case 's': case 'ArrowDown':
+			server.send({ type: 'move', dir: 's' });  break;
+		case 'd': case 'ArrowRight':
+			server.send({ type: 'move', dir: 'e' });  break;
+		case 'a': case 'ArrowLeft':
+			server.send({ type: 'move', dir: 'w' });  break;
 		default:  console.log(e.key);
 		}
 	});

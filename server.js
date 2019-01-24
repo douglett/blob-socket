@@ -36,22 +36,53 @@ server.listen(PORT, () => console.log(`${fdate()}  Listening on port ${PORT}`));
 
 // manage list of connected clients
 const clients = new function() {
+	const fieldWidth = 50;
+	const colorList = [ 'red', 'green', 'blue', 'orange', 'gray' ];
 	const clientlist = [];
 
 	this.register = (connection) => {
 		clientlist.push({ 
 			connection: connection, 
-			data: {} 
+			data: {
+				id: Math.random()*10000|0,
+				color: colorList[ Math.random()*colorList.length|0 ],
+				x: Math.random()*fieldWidth|0,
+				y: Math.random()*fieldWidth|0
+			} 
 		});
+		this.move(connection, '.');
 	};
 	this.unregister = (connection) => {
 		const index = clientlist.findIndex(client => client.connection === connection);
 		clientlist.splice(index, 1);
 	};
+	this.getData = (connection) => {
+		let client = clientlist.find(client => client.connection === connection);
+		return client ? client.data : {};
+	};
 
 	this.broadcast = (mdata) => {
 		const msg = JSON.stringify(mdata);
 		clientlist.forEach(client => client.connection.sendUTF(msg));
+	};
+
+	this.getState = () => {
+		const state = [];
+		clientlist.forEach(client => state.push(client.data));
+		return state;
+	};
+
+	this.move = (connection, dir) => {
+		const data = this.getData(connection);
+		switch (dir) {
+		case 'n':  if (data.y > 0) data.y--;  break;
+		case 's':  if (data.y < fieldWidth-1) data.y++;  break;
+		case 'e':  if (data.x < fieldWidth-1) data.x++;  break;
+		case 'w':  if (data.x > 0) data.x--;  break;
+		case '.':  break;
+		// default:  return;
+		}
+		this.broadcast({ type: 'state', state: this.getState() });
 	};
 };
 
@@ -71,8 +102,11 @@ wsServer.on('request', (request) => {
 			mdata = JSON.parse(message.utf8Data);
 		} catch(e) { }
 		// handle data
-		console.log(`${fdate()}  Message: ${mdata.text}`);
-		clients.broadcast({ type: 'message', text: 'hi!' });
+		console.log(`${fdate()}  Message recieved: ${mdata.type}`);
+		switch (mdata.type) {
+		case 'move':  clients.move(connection, mdata.dir);  break;
+		}
+		// clients.broadcast({ type: 'message', text: 'hi!' });
 	});
 
 	connection.on('close', (connection) => {
