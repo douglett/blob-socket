@@ -64,16 +64,19 @@ const server = new function() {
 	let state = this.state = [];
 
 	// methods
-	const onopen = () => {
+	const onopen = (e) => {
 		console.log('websocket connection open');
 		// connection.send(JSON.stringify({ type: 'message', text: 'hello' }));
 		// this.send({ type: 'state' });  // get initial state
 	};
 	const onerror = (error) => {
-		console.error('websocket connection error');
+		console.error('websocket connection error', error);
+	};
+	const onclose = (e) => {
+		console.log('websocket connection closed', e);
 	};
 	const onmessage = (message) => {
-		// console.log(message.data)
+		// console.log(message.data);
 		const msg = JSON.parse(message.data);
 		let index = -1;
 		// 
@@ -91,9 +94,8 @@ const server = new function() {
 			msg.state.forEach(data => state.push(data));  
 			break;
 		case 'update':  // update player position
-			console.log('update', msg.data);
-			index = state.findIndex(data => data.id === msg.data.id);
-			if (index !== -1) state[index] = msg.data;
+			index = state.findIndex(data => data.id === msg.client.id);
+			if (index !== -1) state[index] = msg.client;
 			break;
 		default:  
 			console.log('unknown message type', msg);
@@ -106,6 +108,7 @@ const server = new function() {
 		// add event listeners
 		connection.onopen = onopen;
 		connection.onerror = onerror;
+		connection.onclose = onclose;
 		connection.onmessage = onmessage;
 	};
 

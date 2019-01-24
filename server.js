@@ -106,8 +106,8 @@ const clients = new function() {
 		case '.':  break;  // null move - just broadcast client position
 		default:  return;
 		}
-		this.broadcastState();
-		// this.broadcast({ type: 'update', data: client.data });
+		// this.broadcastState();
+		this.broadcast({ type: 'update', client: client.data });
 	};
 };
 
@@ -120,17 +120,18 @@ wsServer.on('request', (request) => {
 	clients.register(connection);
 
 	connection.on('message', (message) => {
-		// get message data
-		let msg;
 		try {
+			// get message data
 			if (!message.type === 'utf8') return;
-			msg = JSON.parse(message.utf8Data);
-		} catch(e) { }
-		// handle data
-		console.log(`${fdate()}  Message recieved: ${msg.type}`);
-		switch (msg.type) {
-		case 'state':  clients.state(connection);  break;
-		case 'move':  clients.move(connection, msg.dir);  break;
+			const msg = JSON.parse(message.utf8Data);
+			// handle data
+			console.log(`${fdate()}  Message recieved: ${msg.type}`);
+			switch (msg.type) {
+			case 'state':  clients.state(connection);  break;
+			case 'move':  clients.move(connection, msg.dir);  break;
+			}
+		} catch(e) {
+			console.error(e);
 		}
 	});
 
