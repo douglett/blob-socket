@@ -8,9 +8,13 @@
 
 <canvas id="mycanvas"></canvas>
 
-<div id="message">
+<p id="identity">
+	<span class="color"></span> <span class="name"></span>
+</p>
+
+<!-- <div id="message">
 	<p>start</p>
-</div>
+</div> -->
 
 
 <style type="text/css">
@@ -20,6 +24,15 @@
 	border: 1px solid black;
 	image-rendering: pixelated;
 }
+
+#identity .color {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border: 1px solid black;
+}
+#identity .name {}
+
 #message {
 	/*white-space: pre;*/
 	border: 1px solid black;
@@ -47,25 +60,43 @@ function main() {
 const server = new function() {
 	// vars
 	let connection = null;
-	let playerid = '';
-	let state = this.state = [
-		{ playerid: 'fred', color: 'red', x: 10, y: 10 },
-		{ playerid: 'bob', color: 'green', x: 20, y: 20 },
-	];
+	let identity = {};
+	let state = this.state = [];
 
 	// methods
 	const onopen = () => {
 		console.log('websocket connection open');
-		connection.send(JSON.stringify({ text: 'hello' }));
+		// connection.send(JSON.stringify({ type: 'message', text: 'hello' }));
+		// this.send({ type: 'state' });  // get initial state
 	};
 	const onerror = (error) => {
 		console.error('websocket connection error');
 	};
 	const onmessage = (message) => {
-		const mdata = JSON.parse(message.data);
-		switch (mdata.type) {
-		case 'message':  console.log('message:', mdata.text);  break;
-		case 'state':  state.splice(0);  mdata.state.forEach(d => state.push(d));  break;
+		// console.log(message.data)
+		const msg = JSON.parse(message.data);
+		let index = -1;
+		// 
+		switch (msg.type) {
+		case 'identity':  // my identity
+			identity = msg.identity;  
+			console.log('recieved identity', identity.id);  
+			draw.setIdentity(identity);  
+			break;
+		case 'message':  // chat message
+			console.log('message:', msg.text);
+			break;
+		case 'state':  // full state replacement
+			state.splice(0);  
+			msg.state.forEach(data => state.push(data));  
+			break;
+		case 'update':  // update player position
+			console.log('update', msg.data);
+			index = state.findIndex(data => data.id === msg.data.id);
+			if (index !== -1) state[index] = msg.data;
+			break;
+		default:  
+			console.log('unknown message type', msg);
 		}
 	};
 
@@ -105,7 +136,7 @@ const draw = new function() {
 	}
 
 	// events
-	window.addEventListener('keydown', (e) => {
+	document.addEventListener('keydown', (e) => {
 		switch (e.key) {
 		case 'w': case 'ArrowUp':
 			server.send({ type: 'move', dir: 'n' });  break;
@@ -123,7 +154,12 @@ const draw = new function() {
 	this.mainloop = () => {
 		this.paint();
 		requestAnimationFrame(this.mainloop);
-	}
+	};
+
+	this.setIdentity = (identity) => {
+		document.querySelector('#identity .color').style.backgroundColor = identity.color;
+		document.querySelector('#identity .name').innerHTML = identity.id;
+	};
 };
 	
 </script>

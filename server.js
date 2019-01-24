@@ -40,8 +40,10 @@ const clients = new function() {
 	const colorList = [ 'red', 'green', 'blue', 'orange', 'gray' ];
 	const clientlist = [];
 
+
+	// connection and client management
 	this.register = (connection) => {
-		clientlist.push({ 
+		const client = { 
 			connection: connection, 
 			data: {
 				id: Math.random()*10000|0,
@@ -49,40 +51,63 @@ const clients = new function() {
 				x: Math.random()*fieldWidth|0,
 				y: Math.random()*fieldWidth|0
 			} 
-		});
-		this.move(connection, '.');
+		};
+		clientlist.push(client);
+		// send player his own details
+		this.send(connection, { type: 'identity', identity: client.data });
+		// broadcast new players existance
+		this.broadcastState();
+		// return current client
+		return client;
 	};
 	this.unregister = (connection) => {
 		const index = clientlist.findIndex(client => client.connection === connection);
 		clientlist.splice(index, 1);
+		this.broadcastState();
 	};
-	this.getData = (connection) => {
+	this.getClient = (connection) => {
 		let client = clientlist.find(client => client.connection === connection);
-		return client ? client.data : {};
+		return client ? client : {};
 	};
-
-	this.broadcast = (mdata) => {
-		const msg = JSON.stringify(mdata);
-		clientlist.forEach(client => client.connection.sendUTF(msg));
-	};
-
 	this.getState = () => {
 		const state = [];
 		clientlist.forEach(client => state.push(client.data));
 		return state;
 	};
 
+
+	// general messaging
+	this.send = (connection, msg) => {
+		// const data = this.getClient(connection).data;
+		const message = JSON.stringify(msg);
+		connection.sendUTF(message);
+	};
+	this.broadcast = (msg) => {
+		const message = JSON.stringify(msg);
+		clientlist.forEach(client => client.connection.sendUTF(message));
+	};
+	this.broadcastState = () => {
+		clientlist.forEach(client => this.state(client.connection));
+	};
+
+
+	// player commands
+	this.state = (connection) => {
+		this.send(connection, { type: 'state', state: this.getState() });
+	};
 	this.move = (connection, dir) => {
-		const data = this.getData(connection);
+		const client = this.getClient(connection);
+		const data = client.data;
 		switch (dir) {
 		case 'n':  if (data.y > 0) data.y--;  break;
 		case 's':  if (data.y < fieldWidth-1) data.y++;  break;
 		case 'e':  if (data.x < fieldWidth-1) data.x++;  break;
 		case 'w':  if (data.x > 0) data.x--;  break;
-		case '.':  break;
-		// default:  return;
+		case '.':  break;  // null move - just broadcast client position
+		default:  return;
 		}
-		this.broadcast({ type: 'state', state: this.getState() });
+		this.broadcastState();
+		// this.broadcast({ type: 'update', data: client.data });
 	};
 };
 
@@ -96,17 +121,17 @@ wsServer.on('request', (request) => {
 
 	connection.on('message', (message) => {
 		// get message data
-		let mdata;
+		let msg;
 		try {
 			if (!message.type === 'utf8') return;
-			mdata = JSON.parse(message.utf8Data);
+			msg = JSON.parse(message.utf8Data);
 		} catch(e) { }
 		// handle data
-		console.log(`${fdate()}  Message recieved: ${mdata.type}`);
-		switch (mdata.type) {
-		case 'move':  clients.move(connection, mdata.dir);  break;
+		console.log(`${fdate()}  Message recieved: ${msg.type}`);
+		switch (msg.type) {
+		case 'state':  clients.state(connection);  break;
+		case 'move':  clients.move(connection, msg.dir);  break;
 		}
-		// clients.broadcast({ type: 'message', text: 'hi!' });
 	});
 
 	connection.on('close', (connection) => {
