@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 1337;
 
 
 // basic file server
-const staticServer = ServeStatic("./");
+const staticServer = ServeStatic("./static");
 const server = http.createServer((request, response) => {
 	let done = FinalHandler(request, response);
 	staticServer(request, response, done);
