@@ -19,8 +19,8 @@
 
 <style type="text/css">
 #mycanvas {
-	width: 200px;
-	height: 200px;
+	/*width: 200px;*/
+	/*height: 200px;*/
 	border: 1px solid black;
 	image-rendering: pixelated;
 }
@@ -62,12 +62,14 @@ const server = new function() {
 	let connection = null;
 	let identity = {};
 	let state = this.state = [];
+	// let map = null;
 
 	// methods
 	const onopen = (e) => {
 		console.log('websocket connection open');
 		// connection.send(JSON.stringify({ type: 'message', text: 'hello' }));
 		// this.send({ type: 'state' });  // get initial state
+		this.send({ type: 'map' });  // get initial state
 	};
 	const onerror = (error) => {
 		console.error('websocket connection error', error);
@@ -88,6 +90,10 @@ const server = new function() {
 			break;
 		case 'message':  // chat message
 			console.log('message:', msg.text);
+			break;
+		case 'map':
+			this.map = msg.map;
+			// document.querySelector('#map').innerHTML = this.map.data.join('\n');
 			break;
 		case 'state':  // full state replacement
 			state.splice(0);  
@@ -123,20 +129,37 @@ const server = new function() {
 const draw = new function() {
 	// vars
 	const canvas = document.querySelector('#mycanvas');
-	const width = canvas.width = 50;
-	const height = canvas.height = 50;
+	const width = canvas.width = 150;
+	const height = canvas.height = 150;
 	const ctx = canvas.getContext('2d');
 
 	// drawing
 	this.paint = () => {
 		ctx.fillStyle = 'white';
 		ctx.fillRect(0, 0, width, height);
-		
+
+		if (!server.map) return;
+
+		ctx.save();
+		ctx.translate(5, 5);
+		// draw map data
+		const th = 12, tw = 8;
+		ctx.font = `${12}px monospace`;
+		ctx.textBaseline = 'top';
+		ctx.fillStyle = 'black';
+		for (let y = 0; y < server.map.height; y++)
+		for (let x = 0; x < server.map.width; x++) {
+			ctx.fillText(server.map.data[y][x], x*tw, y*th);
+		}
+		// draw characters
 		server.state.forEach(p => {
+			ctx.fillStyle = 'white';
+			ctx.fillRect(p.x*tw, p.y*th, tw, th);
 			ctx.fillStyle = p.color;
-			ctx.fillRect(p.x, p.y, 1, 1);
+			ctx.fillText('@', p.x*tw, p.y*th);
 		});
-	}
+		ctx.restore();
+	};
 
 	// events
 	document.addEventListener('keydown', (e) => {
