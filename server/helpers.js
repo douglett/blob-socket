@@ -1,4 +1,5 @@
 // useful helper functions
+'use strict';
 
 // format date
 const fdate = () => {

@@ -8,8 +8,9 @@ const WebSocketServer = require('websocket').server;
 const FinalHandler = require('finalhandler');
 const ServeStatic = require('serve-static');
 
-const fdate = require('./helpers.js').fdate;
-const Clients = require('./clients.js');
+const fdate = require('./helpers').fdate;
+const Clients = require('./Clients');
+const MapGen = require('./MapGen');
 
 const PORT = process.env.PORT || 1337;
 
@@ -52,3 +53,7 @@ wsServer.on('request', (request) => {
 		Clients.unregister(connection);
 	});
 });
+
+
+// test
+MapGen.generate();

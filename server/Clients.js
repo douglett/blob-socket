@@ -1,4 +1,10 @@
 // manage list of connected clients
+// 
+'use strict';
+
+const Gmap = require('./Gmap');
+
+
 const Clients = new function() {
 	const fieldWidth = 50;
 	const colorList = [ 'red', 'green', 'blue', 'orange', 'gray' ];
@@ -75,36 +81,6 @@ const Clients = new function() {
 	};
 	this.map = (connection) => {
 		this.send(connection, { type: 'map', map: Gmap.mapData });
-	};
-};
-
-
-const Gmap = new function() {
-	const width = 10;
-	const height = 10;
-	const map = [
-		'##########',
-		'#........#',
-		'#........#',
-		'#...##...#',
-		'#........#',
-		'#........#',
-		'#........#',
-		'#........#',
-		'#........#',
-		'##########',
-	];
-
-	this.mapData = {
-		width: width,
-		height: height,
-		data: map
-	};
-
-	this.collide = (x, y) => {
-		if (x < 0 || y < 0 || x >= width || y >= height) return 1;
-		if (map[y][x] !== '.') return 1;
-		return 0;
 	};
 };
 
