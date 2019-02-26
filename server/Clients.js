@@ -13,14 +13,15 @@ const Clients = new function() {
 
 	// connection and client management
 	this.register = (connection) => {
-		const pos = Gmap.getspawn();
+		const gmap = new Gmap(1234);
 		const client = { 
 			connection: connection, 
+			gmap: gmap,
 			data: {
 				id: Math.random()*10000|0,
 				color: colorList[ Math.random()*colorList.length|0 ],
-				x: pos.x,
-				y: pos.y
+				x: gmap.getSpawn().x,
+				y: gmap.getSpawn().y
 			} 
 		};
 		clientlist.push(client);
@@ -70,10 +71,10 @@ const Clients = new function() {
 		const client = this.getClient(connection);
 		const data = client.data;
 		switch (dir) {
-		case 'n':  if (!Gmap.collide(data.x, data.y-1)) data.y--;  break;
-		case 's':  if (!Gmap.collide(data.x, data.y+1)) data.y++;  break;
-		case 'e':  if (!Gmap.collide(data.x+1, data.y)) data.x++;  break;
-		case 'w':  if (!Gmap.collide(data.x-1, data.y)) data.x--;  break;
+		case 'n':  if (!client.gmap.collide(data.x, data.y-1)) data.y--;  break;
+		case 's':  if (!client.gmap.collide(data.x, data.y+1)) data.y++;  break;
+		case 'e':  if (!client.gmap.collide(data.x+1, data.y)) data.x++;  break;
+		case 'w':  if (!client.gmap.collide(data.x-1, data.y)) data.x--;  break;
 		case '.':  break;  // null move - just broadcast client position
 		default:  return;
 		}
@@ -81,7 +82,8 @@ const Clients = new function() {
 		this.broadcast({ type: 'update', client: client.data });
 	};
 	this.map = (connection) => {
-		this.send(connection, { type: 'map', map: Gmap.get() });
+		const client = this.getClient(connection);
+		this.send(connection, { type: 'map', map: client.gmap.map });
 	};
 };
 
