@@ -26,11 +26,12 @@ const rand = new function() {
 
 
 const MapGen = new function() {
-	const map = [];
 	const width = 50;
 	const height = 25;
 	const density = 15;
 	const defseed = 12345;
+	let map = [];
+	let mobs = [];
 	let seed = defseed;
 
 
@@ -38,7 +39,7 @@ const MapGen = new function() {
 	this.generate = (nseed) => {
 		seed = typeof nseed === 'number' ? nseed : defseed;
 		// blank map
-		map.splice(0);
+		map = [], mobs = [];
 		for (let y = 0; y < height; y++) {
 			let row = [];
 			map.push(row);
@@ -65,13 +66,25 @@ const MapGen = new function() {
 			d_connect(rooms[i-1].x+2, rooms[i-1].y+2, rooms[i].x+2, rooms[i].y+2);
 		// draw walls
 		d_walls();
+		// spawning
+		s_player();
+		s_items();
+		s_enemies();
 		// return
 		this.show();
 		return this.get();
 	};
 
 	// get
-	this.get = () => map.map(r => r.join(''));
+	this.get = () => {
+		return {
+			seed: seed,
+			width: width,
+			height: height,
+			data: map.map(r => r.join('')),
+			mobs: mobs
+		};
+	};
 	// display
 	this.show = () => {
 		console.log(`::Generated map with seed ${seed}::`);
@@ -128,6 +141,44 @@ const MapGen = new function() {
 			for (let xx = -1; xx <= 1; xx++)
 				if (tileat(x+xx, y+yy) === '.')
 					map[y][x] = '#';
+		}
+	};
+
+
+
+	// spawning
+	const s_spawn = () => {
+		let x, y, r = 0;
+		while (true) {
+			x = rand() % width;
+			y = rand() % height;
+			if (map[y][x] === '.') break;
+			if (++r >= 1000) { x = y = 0; break; }
+		}
+		return { x:x, y:y };
+	};
+	// spawn player
+	const s_player = () => {
+		const p = s_spawn();
+		p.type = '@';
+		mobs.push(p);
+	};
+	// spawn items 
+	const s_items = () => {
+		const count = 3 + rand() % 10;
+		for (let i = 0; i < count; i++) {
+			const item = s_spawn();
+			item.type = '$';
+			mobs.push(item);
+		}
+	};
+	// spawn enemies
+	const s_enemies = () => {
+		const count = 3 + rand() % 10;
+		for (let i = 0; i < count; i++) {
+			const e = s_spawn();
+			e.type = 'g';
+			mobs.push(e);
 		}
 	};
 };

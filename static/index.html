@@ -93,6 +93,7 @@ const server = new function() {
 			break;
 		case 'map':
 			this.map = msg.map;
+			console.log(msg.map);
 			break;
 		case 'state':  // full state replacement
 			state.splice(0);  
@@ -165,13 +166,13 @@ const draw = new function() {
 	// events
 	document.addEventListener('keydown', (e) => {
 		switch (e.key) {
-		case 'w': case 'ArrowUp':
+		case 'w': case 'k': case 'ArrowUp':
 			server.send({ type: 'move', dir: 'n' });  break;
-		case 's': case 'ArrowDown':
+		case 's': case 'j': case 'ArrowDown':
 			server.send({ type: 'move', dir: 's' });  break;
-		case 'd': case 'ArrowRight':
+		case 'd': case 'l': case 'ArrowRight':
 			server.send({ type: 'move', dir: 'e' });  break;
-		case 'a': case 'ArrowLeft':
+		case 'a': case 'h': case 'ArrowLeft':
 			server.send({ type: 'move', dir: 'w' });  break;
 		default:  console.log(e.key);
 		}
