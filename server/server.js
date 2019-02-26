@@ -10,7 +10,6 @@ const ServeStatic = require('serve-static');
 
 const fdate = require('./helpers').fdate;
 const Clients = require('./Clients');
-const MapGen = require('./MapGen');
 
 const PORT = process.env.PORT || 1337;
 
@@ -53,7 +52,3 @@ wsServer.on('request', (request) => {
 		Clients.unregister(connection);
 	});
 });
-
-
-// test
-MapGen.generate();

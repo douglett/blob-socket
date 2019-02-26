@@ -6,20 +6,21 @@ const Gmap = require('./Gmap');
 
 
 const Clients = new function() {
-	const fieldWidth = 50;
+	// const fieldWidth = 50;
 	const colorList = [ 'red', 'green', 'blue', 'orange', 'gray' ];
 	const clientlist = [];
 
 
 	// connection and client management
 	this.register = (connection) => {
+		const pos = Gmap.getspawn();
 		const client = { 
 			connection: connection, 
 			data: {
 				id: Math.random()*10000|0,
 				color: colorList[ Math.random()*colorList.length|0 ],
-				x: 1, // Math.random()*fieldWidth|0,
-				y: 1, //Math.random()*fieldWidth|0
+				x: pos.x,
+				y: pos.y
 			} 
 		};
 		clientlist.push(client);
@@ -80,7 +81,7 @@ const Clients = new function() {
 		this.broadcast({ type: 'update', client: client.data });
 	};
 	this.map = (connection) => {
-		this.send(connection, { type: 'map', map: Gmap.mapData });
+		this.send(connection, { type: 'map', map: Gmap.get() });
 	};
 };
 

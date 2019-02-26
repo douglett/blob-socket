@@ -93,7 +93,6 @@ const server = new function() {
 			break;
 		case 'map':
 			this.map = msg.map;
-			// document.querySelector('#map').innerHTML = this.map.data.join('\n');
 			break;
 		case 'state':  // full state replacement
 			state.splice(0);  
@@ -129,31 +128,33 @@ const server = new function() {
 const draw = new function() {
 	// vars
 	const canvas = document.querySelector('#mycanvas');
-	const width = canvas.width = 200;
-	const height = canvas.height = 200;
 	const ctx = canvas.getContext('2d');
+	const th = 12, tw = 8, fg = 'black', bg = 'white';  // text sizing
+	let width = canvas.width = 450;
+	let height = canvas.height = 350;
 
 	// drawing
 	this.paint = () => {
-		ctx.fillStyle = 'white';
+		ctx.fillStyle = bg;
 		ctx.fillRect(0, 0, width, height);
-
 		if (!server.map) return;
 
 		ctx.save();
 		ctx.translate(5, 5);
 		// draw map data
-		const th = 12, tw = 8;
-		ctx.font = `${12}px monospace`;
+		ctx.font = `${th}px monospace`;
 		ctx.textBaseline = 'top';
-		ctx.fillStyle = 'black';
+		// ctx.fillStyle = 'black';
 		for (let y = 0; y < server.map.height; y++)
 		for (let x = 0; x < server.map.width; x++) {
+			// ctx.fillStyle = bg;
+			// ctx.fillRect(x*tw, y*th, tw, th);
+			ctx.fillStyle = fg;
 			ctx.fillText(server.map.data[y][x], x*tw, y*th);
 		}
 		// draw characters
 		server.state.forEach(p => {
-			ctx.fillStyle = 'white';
+			ctx.fillStyle = bg;
 			ctx.fillRect(p.x*tw, p.y*th, tw, th);
 			ctx.fillStyle = p.color;
 			ctx.fillText('@', p.x*tw, p.y*th);

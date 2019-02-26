@@ -30,12 +30,13 @@ const MapGen = new function() {
 	const width = 50;
 	const height = 25;
 	const density = 15;
-	const seed = 12345;
-
+	const defseed = 12345;
+	let seed = defseed;
 
 
 	// main generator
-	this.generate = () => {
+	this.generate = (nseed) => {
+		seed = typeof nseed === 'number' ? nseed : defseed;
 		// blank map
 		map.splice(0);
 		for (let y = 0; y < height; y++) {
@@ -64,14 +65,17 @@ const MapGen = new function() {
 			d_connect(rooms[i-1].x+2, rooms[i-1].y+2, rooms[i].x+2, rooms[i].y+2);
 		// draw walls
 		d_walls();
-		// display
-		console.log(`::Generated map with seed ${seed}::`);
-		console.log(this.show());
+		// return
+		this.show();
+		return this.get();
 	};
 
+	// get
+	this.get = () => map.map(r => r.join(''));
 	// display
 	this.show = () => {
-		return map.map(r => r.join('')).join('\n');
+		console.log(`::Generated map with seed ${seed}::`);
+		console.log( map.map(r => r.join('')).join('\n') );
 	};
 
 
