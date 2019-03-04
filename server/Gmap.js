@@ -2,7 +2,7 @@
 // 
 'use strict';
 
-const MapGen = require('./mapgen');
+const MapGen = require('./mapgen.js');
 
 
 class Gmap {
