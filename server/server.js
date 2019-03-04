@@ -9,7 +9,7 @@ const FinalHandler = require('finalhandler');
 const ServeStatic = require('serve-static');
 
 const fdate = require('./helpers.js').fdate;
-const Clients = require('./clients.js');
+const Clients = require('./Clients.js');
 
 const PORT = process.env.PORT || 1337;
 
