@@ -9,13 +9,13 @@ const FinalHandler = require('finalhandler');
 const ServeStatic = require('serve-static');
 
 const fdate = require('./helpers').fdate;
-const Clients = require('./Clients');
+const Clients = require('./clients');
 
 const PORT = process.env.PORT || 1337;
 
 
 // basic file server
-const staticServer = ServeStatic("./static");
+const staticServer = ServeStatic('./');
 const server = http.createServer((request, response) => {
 	let done = FinalHandler(request, response);
 	staticServer(request, response, done);

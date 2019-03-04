@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>blob-socket</title>
+</head>
+<body onload="main()">
+
+
+<canvas id="mycanvas"></canvas>
+
+<p id="identity">
+	<span class="color"></span> <span class="name"></span>
+</p>
+
+<!-- <div id="message">
+	<p>start</p>
+</div> -->
+
+
+<style type="text/css">
+#mycanvas {
+	/*width: 200px;*/
+	/*height: 200px;*/
+	border: 1px solid black;
+	image-rendering: pixelated;
+}
+
+#identity .color {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border: 1px solid black;
+}
+#identity .name {}
+
+#message {
+	/*white-space: pre;*/
+	border: 1px solid black;
+	padding: 10px;
+	margin-top: 5px;
+}
+#message p {
+	margin: 0;
+	margin-bottom: 0.5em;
+}
+</style>
+
+
+<script type="text/javascript">
+
+function main() {
+	console.log('begin');
+	server.startConnection();
+	draw.mainloop();
+}
+
+
+
+// server connection management
+const server = new function() {
+	// vars
+	let connection = null;
+	let identity = {};
+	let state = this.state = [];
+	// let map = null;
+
+	// methods
+	const onopen = (e) => {
+		console.log('websocket connection open');
+		// connection.send(JSON.stringify({ type: 'message', text: 'hello' }));
+		// this.send({ type: 'state' });  // get initial state
+		this.send({ type: 'map' });  // get initial state
+	};
+	const onerror = (error) => {
+		console.error('websocket connection error', error);
+	};
+	const onclose = (e) => {
+		console.log('websocket connection closed', e);
+	};
+	const onmessage = (message) => {
+		// console.log(message.data);
+		const msg = JSON.parse(message.data);
+		let index = -1;
+		// 
+		switch (msg.type) {
+		case 'identity':  // my identity
+			identity = msg.identity;  
+			console.log('recieved identity', identity.id);  
+			draw.setIdentity(identity);  
+			break;
+		case 'message':  // chat message
+			console.log('message:', msg.text);
+			break;
+		case 'map':
+			this.map = msg.map;
+			console.log(msg.map);
+			break;
+		case 'state':  // full state replacement
+			state.splice(0);  
+			msg.state.forEach(data => state.push(data));  
+			break;
+		case 'update':  // update player position
+			index = state.findIndex(data => data.id === msg.client.id);
+			if (index !== -1) state[index] = msg.client;
+			break;
+		default:  
+			console.log('unknown message type', msg);
+		}
+	};
+
+	this.startConnection = () => {
+		const socket = location.protocol === 'https:' ? 'wss' : 'ws';
+		connection = new WebSocket(`${socket}://${location.host}`);
+		// add event listeners
+		connection.onopen = onopen;
+		connection.onerror = onerror;
+		connection.onclose = onclose;
+		connection.onmessage = onmessage;
+	};
+
+	this.send = (obj) => {
+		connection.send(JSON.stringify(obj));
+	};
+};
+
+
+
+// canvas
+const draw = new function() {
+	// vars
+	const canvas = document.querySelector('#mycanvas');
+	const ctx = canvas.getContext('2d');
+	const th = 12, tw = 8, fg = 'black', bg = 'white';  // text sizing
+	let width = canvas.width = 450;
+	let height = canvas.height = 350;
+
+	// drawing
+	this.paint = () => {
+		ctx.fillStyle = bg;
+		ctx.fillRect(0, 0, width, height);
+		if (!server.map) return;
+
+		ctx.save();
+		ctx.translate(5, 5);
+		// draw map data
+		ctx.font = `${th}px monospace`;
+		ctx.textBaseline = 'top';
+		// ctx.fillStyle = 'black';
+		for (let y = 0; y < server.map.height; y++)
+		for (let x = 0; x < server.map.width; x++) {
+			// ctx.fillStyle = bg;
+			// ctx.fillRect(x*tw, y*th, tw, th);
+			ctx.fillStyle = fg;
+			ctx.fillText(server.map.data[y][x], x*tw, y*th);
+		}
+		// draw characters
+		server.state.forEach(p => {
+			ctx.fillStyle = bg;
+			ctx.fillRect(p.x*tw, p.y*th, tw, th);
+			ctx.fillStyle = p.color;
+			ctx.fillText('@', p.x*tw, p.y*th);
+		});
+		ctx.restore();
+	};
+
+	// events
+	document.addEventListener('keydown', (e) => {
+		switch (e.key) {
+		case 'w': case 'k': case 'ArrowUp':
+			server.send({ type: 'move', dir: 'n' });  break;
+		case 's': case 'j': case 'ArrowDown':
+			server.send({ type: 'move', dir: 's' });  break;
+		case 'd': case 'l': case 'ArrowRight':
+			server.send({ type: 'move', dir: 'e' });  break;
+		case 'a': case 'h': case 'ArrowLeft':
+			server.send({ type: 'move', dir: 'w' });  break;
+		default:  console.log(e.key);
+		}
+	});
+
+	// start main loop
+	this.mainloop = () => {
+		this.paint();
+		requestAnimationFrame(this.mainloop);
+	};
+
+	this.setIdentity = (identity) => {
+		document.querySelector('#identity .color').style.backgroundColor = identity.color;
+		document.querySelector('#identity .name').innerHTML = identity.id;
+	};
+};
+	
+</script>
+
+
+</body>
+</html>

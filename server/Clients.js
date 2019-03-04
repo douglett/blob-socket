@@ -2,7 +2,7 @@
 // 
 'use strict';
 
-const Gmap = require('./Gmap');
+const Gmap = require('./gmap');
 
 
 const Clients = new function() {
