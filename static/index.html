@@ -84,25 +84,25 @@ const server = new function() {
 		// 
 		switch (msg.type) {
 		case 'identity':  // my identity
-			identity = msg.identity;  
-			console.log('recieved identity', identity.id);  
+			identity = msg.data;  
+			console.log(`recieved identity`, identity);
 			draw.setIdentity(identity);  
 			break;
 		case 'message':  // chat message
 			console.log('message:', msg.text);
 			break;
 		case 'map':
-			this.map = msg.map;
-			console.log(msg.map);
+			this.map = msg.data;
+			console.log(msg.data);
 			break;
-		case 'state':  // full state replacement
-			state.splice(0);  
-			msg.state.forEach(data => state.push(data));  
-			break;
-		case 'update':  // update player position
-			index = state.findIndex(data => data.id === msg.client.id);
-			if (index !== -1) state[index] = msg.client;
-			break;
+		// case 'state':  // full state replacement
+		// 	state.splice(0);  
+		// 	msg.state.forEach(data => state.push(data));  
+		// 	break;
+		// case 'update':  // update player position
+		// 	index = state.findIndex(data => data.id === msg.client.id);
+		// 	if (index !== -1) state[index] = msg.client;
+		// 	break;
 		default:  
 			console.log('unknown message type', msg);
 		}
@@ -145,20 +145,22 @@ const draw = new function() {
 		// draw map data
 		ctx.font = `${th}px monospace`;
 		ctx.textBaseline = 'top';
-		// ctx.fillStyle = 'black';
 		for (let y = 0; y < server.map.height; y++)
 		for (let x = 0; x < server.map.width; x++) {
-			// ctx.fillStyle = bg;
-			// ctx.fillRect(x*tw, y*th, tw, th);
 			ctx.fillStyle = fg;
-			ctx.fillText(server.map.data[y][x], x*tw, y*th);
+			ctx.fillText(server.map.level[y][x], x*tw, y*th);
 		}
 		// draw characters
-		server.state.forEach(p => {
+		server.map.mobs.forEach(mob => {
 			ctx.fillStyle = bg;
-			ctx.fillRect(p.x*tw, p.y*th, tw, th);
-			ctx.fillStyle = p.color;
-			ctx.fillText('@', p.x*tw, p.y*th);
+			ctx.fillRect(mob.x*tw, mob.y*th, tw, th);
+			switch (mob.type) {
+				case '@':  ctx.fillStyle = 'blueviolet';  break;
+				case '$':  ctx.fillStyle = 'gold';  break;
+				case 'g':  ctx.fillStyle = 'green';  break;
+				default:   ctx.fillStyle = 'black';
+			}
+			ctx.fillText(mob.type, mob.x*tw, mob.y*th);
 		});
 		ctx.restore();
 	};

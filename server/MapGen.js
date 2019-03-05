@@ -81,7 +81,7 @@ const MapGen = new function() {
 			seed: seed,
 			width: width,
 			height: height,
-			data: map.map(r => r.join('')),
+			level: map.map(r => r.join('')),
 			mobs: mobs
 		};
 	};
