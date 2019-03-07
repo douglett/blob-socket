@@ -33,3 +33,7 @@ wsServer.on('request', (request) => {
 	const instance = InstanceList.generate();
 	instance.register(connection);
 });
+wsServer.on('error', (error) => {
+	// report and squash errors
+	console.log(`${fdate()}  Websocket error: ${error}`);
+});
