@@ -15,6 +15,12 @@ const fdate = () => {
 };
 
 
+const ttlog = (...args) => {
+	console.log(`${fdate()}  ${args.join(' ')}`);
+};
+
+
 module.exports = {
-	fdate: fdate
+	fdate: fdate,
+	ttlog: ttlog
 };

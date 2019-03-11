@@ -71,7 +71,7 @@ const MapGen = new function() {
 		s_items();
 		s_enemies();
 		// return
-		this.show();
+		// this.show();
 		return this.get();
 	};
 

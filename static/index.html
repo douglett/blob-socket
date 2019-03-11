@@ -70,6 +70,7 @@ const server = new function() {
 		// connection.send(JSON.stringify({ type: 'message', text: 'hello' }));
 		// this.send({ type: 'state' });  // get initial state
 		this.send({ type: 'map' });  // get initial state
+		this.send({ type: 'stats' });  // get initial state
 	};
 	const onerror = (error) => {
 		console.error('websocket connection error', error);
@@ -93,16 +94,11 @@ const server = new function() {
 			break;
 		case 'map':
 			this.map = msg.data;
+			// console.log(msg.data);
+			break;
+		case 'stats':  // full state replacement
 			console.log(msg.data);
 			break;
-		// case 'state':  // full state replacement
-		// 	state.splice(0);  
-		// 	msg.state.forEach(data => state.push(data));  
-		// 	break;
-		// case 'update':  // update player position
-		// 	index = state.findIndex(data => data.id === msg.client.id);
-		// 	if (index !== -1) state[index] = msg.client;
-		// 	break;
 		default:  
 			console.log('unknown message type', msg);
 		}
