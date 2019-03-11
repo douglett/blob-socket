@@ -156,6 +156,11 @@ class Instance {
 		this.map.mobs.forEach(mob => {
 			// move goblin
 			if (mob.type === 'g') {
+				const dist = Math.sqrt((mob.x - p.x)**2 + (mob.y - p.y)**2);
+				// console.log('dist', dist);
+				if (dist < 4) {
+					;
+				}
 			}
 		});
 		// filter dead
