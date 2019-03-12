@@ -6,43 +6,60 @@
 <body onload="main()">
 
 
-<canvas id="mycanvas"></canvas>
-
-<p id="identity">
-	<span class="color"></span> <span class="name"></span>
-</p>
-
-<!-- <div id="message">
-	<p>start</p>
-</div> -->
+<div class="container">
+	<div class="">
+		<canvas id="mycanvas"></canvas>
+	</div>
+	<div id="identity">
+		<span class="color"></span> <span class="name"></span>
+		<div class="stats"></div>
+	</div>
+	<div id="message">
+		<p>start</p>
+	</div>
+</div>
 
 
 <style type="text/css">
+.container {
+	display: flex;
+	flex-wrap: wrap;
+	width: 600px;
+}
+	.container > div {
+		border: 1px solid black;
+		margin: 3px;
+		padding: 3px;
+	}
 #mycanvas {
-	/*width: 200px;*/
-	/*height: 200px;*/
-	border: 1px solid black;
+	/*border: 1px solid black;*/
 	image-rendering: pixelated;
 }
-
-#identity .color {
-	display: inline-block;
-	width: 10px;
-	height: 10px;
-	border: 1px solid black;
+#identity {
+	flex: 1;
 }
-#identity .name {}
-
+	#identity .color {
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		border: 1px solid black;
+	}
+	#identity .name {}
+	#identity .stats {
+		display: flex;
+		flex-wrap: wrap;
+		margin-top: 10px;
+	}
+		#identity .stats div {
+			width: 50%;
+		}
 #message {
-	/*white-space: pre;*/
-	border: 1px solid black;
-	padding: 10px;
-	margin-top: 5px;
+	width: 100%;
 }
-#message p {
-	margin: 0;
-	margin-bottom: 0.5em;
-}
+	#message p {
+		margin: 0;
+		margin-bottom: 0.5em;
+	}
 </style>
 
 
@@ -87,7 +104,7 @@ const server = new function() {
 		case 'identity':  // my identity
 			identity = msg.data;  
 			console.log(`recieved identity`, identity);
-			draw.setIdentity(identity);  
+			draw.setIdentity(identity);
 			break;
 		case 'message':  // chat message
 			console.log('message:', msg.text);
@@ -97,7 +114,8 @@ const server = new function() {
 			// console.log(msg.data);
 			break;
 		case 'stats':  // full state replacement
-			console.log(msg.data);
+			// console.log(msg.data);
+			draw.setStats(msg.data);
 			break;
 		default:  
 			console.log('unknown message type', msg);
@@ -172,6 +190,8 @@ const draw = new function() {
 			server.send({ type: 'move', dir: 'e' });  break;
 		case 'a': case 'h': case 'ArrowLeft':
 			server.send({ type: 'move', dir: 'w' });  break;
+		case '.':
+			server.send({ type: 'move', dir: '.' });  break;
 		default:  console.log(e.key);
 		}
 	});
@@ -185,6 +205,11 @@ const draw = new function() {
 	this.setIdentity = (identity) => {
 		document.querySelector('#identity .color').style.backgroundColor = identity.color;
 		document.querySelector('#identity .name').innerHTML = identity.id;
+	};
+	this.setStats = (stats) => {
+		const st = document.querySelector('#identity .stats');
+		st.innerHTML = '';
+		Object.keys(stats).forEach(key => st.innerHTML += `<div>${key}:</div> <div>${stats[key]}</div>`);
 	};
 };
 	

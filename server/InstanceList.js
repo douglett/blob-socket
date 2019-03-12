@@ -94,61 +94,51 @@ class Instance {
 	getPlayer() {
 		return this.map.mobs.find(mob => mob.type === '@');
 	}
+	getMob(x, y) {
+		return this.map.mobs.find(mob => mob.x === x && mob.y === y);
+	}
 	move(dir) {
 		const p = this.getPlayer();
-		let dx = p.x, dy = p.y;
+		let xx = p.x, yy = p.y;
 		switch (dir) {
-			case 'n':  dy--;  break;
-			case 's':  dy++;  break;
-			case 'e':  dx++;  break;
-			case 'w':  dx--;  break;
-			case '.':  break;
+			case 'n':  yy--;  break;
+			case 's':  yy++;  break;
+			case 'e':  xx++;  break;
+			case 'w':  xx--;  break;
+			// case '.':  break;
 			default:   return false;
 		}
-		if (this.collide(dx, dy)) 
-			return false;
-		else if (this.attack(dx, dy)) 
-			this.moveAI();
-		else {
-			p.x = dx, p.y = dy;
-			this.collect(dx, dy);
-			this.moveAI();
+		switch (this.collide(xx, yy)) {
+			case 0:  p.x = xx, p.y = yy;  break;
+			case 1:  return;  // no move
+			case 2:  this.attack(p, this.getMob(xx, yy));  break;
+			case 3:  this.activate(this.getMob(xx, yy));  p.x = xx, p.y = yy;  break;
 		}
+		this.clearDead();
+		this.moveAI();
+		this.clearDead();
 	}
 	collide(x, y) {
+		// map geometry collision
 		if (x < 0 || y < 0 || x >= this.map.width || y >= this.map.height) return 1;
-		if (!(this.map.level[y][x] === '.' || this.map.level[y][x] === '*')) return 1;
+		if (this.map.level[y][x] === ' ' || this.map.level[y][x] === '#') return 1;
+		// mob collision
+		if (this.map.mobs.some(mob => mob.x === x && mob.y === y && ['g', '@'].indexOf(mob.type) > -1)) return 2;
+		// mob there, but no collision
+		if (this.map.mobs.some(mob => mob.x === x && mob.y === y && mob.type === '$')) return 3;
+		// nothing
 		return 0;
 	}
-	collect(x, y) {
-		let action = false;
-		// attempt to collect each mob
-		this.map.mobs.forEach(mob => {
-			if (mob.x !== x || mob.y !== y) return;
-			if (mob.type === '$') {
-				this.stats.gold += Math.random()*10+1|0;
-				mob.dead = true;
-				action = true;
-			}
-		});
-		// filter dead
-		this.map.mobs = this.map.mobs.filter(mob => !mob.dead);
-		return action;
+	attack(attacker, defender) {
+		defender.dead = true;
+		this.stats.xp += 5;
 	}
-	attack(x, y) {
-		let action = false;
-		// attempt to attack each mob
-		this.map.mobs.forEach(mob => {
-			if (mob.x !== x || mob.y !== y) return;
-			if (mob.type === 'g') {
-				this.stats.xp += 5;
-				mob.dead = true;
-				action = true;
-			}
-		});
-		// filter dead
+	activate(mob) {
+		mob.dead = true;
+		this.stats.gold += 3;
+	}
+	clearDead() {
 		this.map.mobs = this.map.mobs.filter(mob => !mob.dead);
-		return action;
 	}
 	moveAI() {
 		let action = false;
@@ -156,11 +146,18 @@ class Instance {
 		this.map.mobs.forEach(mob => {
 			// move goblin
 			if (mob.type === 'g') {
+				// ignore player if too far aways
 				const dist = Math.sqrt((mob.x - p.x)**2 + (mob.y - p.y)**2);
-				// console.log('dist', dist);
-				if (dist < 4) {
-					;
-				}
+				if (dist > 4) return;
+				// find candidate move direction
+				const dx = p.x - mob.x;
+				const dy = p.y - mob.y;
+				let xx = mob.x, yy = mob.y;
+				// try move
+				if      (dy > 0 && !this.collide(mob.x, mob.y+1)) mob.y++;
+				else if (dy < 0 && !this.collide(mob.x, mob.y-1)) mob.y--;
+				else if (dx > 0 && !this.collide(mob.x+1, mob.y)) mob.x++;
+				else if (dx < 0 && !this.collide(mob.x-1, mob.y)) mob.x--;
 			}
 		});
 		// filter dead
