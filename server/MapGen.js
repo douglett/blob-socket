@@ -148,14 +148,18 @@ const MapGen = new function() {
 
 	// spawning
 	const s_spawn = () => {
-		let x, y, r = 0;
+		let x, y, id, r = 0;
 		while (true) {
 			x = rand() % width;
 			y = rand() % height;
-			if (map[y][x] === '.') break;
+			if (map[y][x] === '.' && !mobs.find(mob => mob.x === x && mob.y === y)) break;
 			if (++r >= 1000) { x = y = 0; break; }
 		}
-		return { x:x, y:y };
+		while (true) {
+			id = rand() % 10000;
+			if (!mobs.find(mob => mob.id === id)) break;
+		}
+		return { id:id, x:x, y:y };
 	};
 	// spawn player
 	const s_player = () => {

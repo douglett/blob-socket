@@ -15,7 +15,7 @@
 		<div class="stats"></div>
 	</div>
 	<div id="message">
-		<p>start</p>
+		<!-- <p>start</p> -->
 	</div>
 </div>
 
@@ -55,6 +55,8 @@
 		}
 #message {
 	width: 100%;
+	height: 120px;
+	overflow-y: hidden;
 }
 	#message p {
 		margin: 0;
@@ -88,6 +90,7 @@ const server = new function() {
 		// this.send({ type: 'state' });  // get initial state
 		this.send({ type: 'map' });  // get initial state
 		this.send({ type: 'stats' });  // get initial state
+		draw.message('Welcome to the game...');
 	};
 	const onerror = (error) => {
 		console.error('websocket connection error', error);
@@ -107,7 +110,8 @@ const server = new function() {
 			draw.setIdentity(identity);
 			break;
 		case 'message':  // chat message
-			console.log('message:', msg.text);
+			// console.log('message:', msg.data);
+			draw.message(msg.data);
 			break;
 		case 'map':
 			this.map = msg.data;
@@ -210,6 +214,13 @@ const draw = new function() {
 		const st = document.querySelector('#identity .stats');
 		st.innerHTML = '';
 		Object.keys(stats).forEach(key => st.innerHTML += `<div>${key}:</div> <div>${stats[key]}</div>`);
+	};
+
+	this.message = (message) => {
+		const msg = document.querySelector('#message');
+		// msg.innerHTML = `<div>${message}</div>` + msg.innerHTML;
+		msg.innerHTML += `<div>${message}</div>`;
+		msg.scrollTop = msg.scrollHeight;
 	};
 };
 	
