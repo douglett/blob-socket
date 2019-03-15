@@ -12,10 +12,10 @@
 	</div>
 	<div id="identity">
 		<span class="color"></span> <span class="name"></span>
-		<div class="stats"></div>
+		<div class="status"></div>
+		<div class="itemlist"></div>
 	</div>
 	<div id="message">
-		<!-- <p>start</p> -->
 	</div>
 </div>
 
@@ -45,13 +45,29 @@
 		border: 1px solid black;
 	}
 	#identity .name {}
-	#identity .stats {
+	#identity .status {
 		display: flex;
 		flex-wrap: wrap;
 		margin-top: 10px;
 	}
-		#identity .stats div {
+		#identity .status div {
 			width: 50%;
+		}
+	#identity .itemlist {
+		display: flex;
+		flex-wrap: wrap;
+		margin-top: 10px;
+	}
+	#identity .item {
+		border: 1px solid black;
+		border-radius: 5px;
+		width: 30px;
+		height: 30px;
+		margin: 2px;
+		overflow: hidden;
+	}
+		#identity .item:hover {
+			border: 1px solid red;
 		}
 #message {
 	width: 100%;
@@ -89,7 +105,7 @@ const server = new function() {
 		// connection.send(JSON.stringify({ type: 'message', text: 'hello' }));
 		// this.send({ type: 'state' });  // get initial state
 		this.send({ type: 'map' });  // get initial state
-		this.send({ type: 'stats' });  // get initial state
+		this.send({ type: 'status' });  // get initial player status
 		draw.message('Welcome to the game...');
 	};
 	const onerror = (error) => {
@@ -117,7 +133,7 @@ const server = new function() {
 			this.map = msg.data;
 			// console.log(msg.data);
 			break;
-		case 'stats':  // full state replacement
+		case 'status':  // full state replacement
 			// console.log(msg.data);
 			draw.setStats(msg.data);
 			break;
@@ -210,10 +226,21 @@ const draw = new function() {
 		document.querySelector('#identity .color').style.backgroundColor = identity.color;
 		document.querySelector('#identity .name').innerHTML = identity.id;
 	};
-	this.setStats = (stats) => {
-		const st = document.querySelector('#identity .stats');
+	this.setStats = (status) => {
+		console.log(status);
+		// player stats
+		const st = document.querySelector('#identity .status');
 		st.innerHTML = '';
-		Object.keys(stats).forEach(key => st.innerHTML += `<div>${key}:</div> <div>${stats[key]}</div>`);
+		Object.keys(status.stats).forEach(key => st.innerHTML += `<div>${key}:</div> <div>${status.stats[key]}</div>`);
+		// inventory
+		const itl = document.querySelector('#identity .itemlist');
+		itl.innerHTML = '';
+		status.inventory.forEach(it => 
+			itl.innerHTML += `<div class="item" item-id="${it.id}">${it.name}</div>`);
+		itl.querySelectorAll('.item').forEach(div => div.onclick = () => {
+			const id = parseInt(div.getAttribute('item-id'));
+			server.send({ type: 'item', id: id });
+		});
 	};
 
 	this.message = (message) => {

@@ -8,7 +8,7 @@ const WebSocketServer = require('websocket').server;
 const FinalHandler = require('finalhandler');
 const ServeStatic = require('serve-static');
 
-const fdate = require('./helpers.js').fdate;
+const ttlog = require('./utils.js').ttlog;
 const InstanceList = require('./InstanceList.js');
 
 const PORT = process.env.PORT || 1337;
@@ -20,20 +20,24 @@ const server = http.createServer((request, response) => {
 	let done = FinalHandler(request, response);
 	staticServer(request, response, done);
 });
-server.listen(PORT, () => console.log(`${fdate()}  Listening on port ${PORT}`));
+server.listen(PORT, () => ttlog(`Listening on port ${PORT}`));
 
 
 // websocket server
 const wsServer = new WebSocketServer({ httpServer: server });
 wsServer.on('request', (request) => {
 	// accept new connection
-	console.log(`${fdate()}  Connection from origin: ${request.origin}`);
+	ttlog(`Connection from origin: ${request.origin}`);
 	const connection = request.accept(null, request.origin);
+	connection.on('error', err => {
+		ttlog(`WS connection error:  origin:${request.origin}  error: ${err}`); // report error
+		connection.close(); // send close message
+	});
 	// just generate new instance
 	const instance = InstanceList.generate();
 	instance.register(connection);
 });
 wsServer.on('error', (error) => {
-	// report and squash errors
-	console.log(`${fdate()}  Websocket error: ${error}`);
+	// report and squash errors (does this work?)
+	ttlog(`Websocket error: ${error}`);
 });

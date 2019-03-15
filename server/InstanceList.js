@@ -1,5 +1,5 @@
 'use strict';
-const ttlog = require('./helpers.js').ttlog;
+const ttlog = require('./utils.js').ttlog;
 const MapGen = require('./MapGen.js');
 
 const colorList = [ 'red', 'green', 'blue', 'orange', 'gray' ];
@@ -42,8 +42,14 @@ class Instance {
 			def: 1,
 			xp: 0,
 			gold: 0,
+			maxhp: 5,
 			hp: 5,
 		};
+		this.inventory = [
+			{ name: 'potion', id: 123 },
+			{ name: 'potion', id: 124 },
+			{ name: 'potion', id: 125 },
+		];
 		// enemy stats
 		this.map.mobs.forEach(mob => {
 			mob.hp = 1;
@@ -58,12 +64,11 @@ class Instance {
 		this.clients.push(client);
 		connection.on('message', message => this.onmessage(client, message));
 		connection.on('close', connection => this.unregister(client));
-		connection.on('error', err => ttlog(`WS connection error:  id:${client.id}  error: ${err}`));
 		this.send(client, 'identity', { id: client.id, instance: client.instance });
 	}
 	unregister(client) {
 		const i = this.clients.indexOf(client);
-		this.clients.splice(i, 1);
+		if (i > -1) this.clients.splice(i, 1);
 	}
 	onmessage(client, message) {
 		// parse
@@ -81,11 +86,15 @@ class Instance {
 				break;
 			case 'move':
 				this.move(msg.dir);
-				this.send(client, 'stats', this.stats);
+				this.send(client, 'status', { stats: this.stats, inventory: this.inventory });
 				this.send(client, 'map', this.map);
 				break;
-			case 'stats':
-				this.send(client, 'stats', this.stats);
+			case 'status':
+				this.send(client, 'status', { stats: this.stats, inventory: this.inventory });
+				break;
+			case 'item':
+				this.useItem(msg.id);
+				this.send(client, 'status', { stats: this.stats, inventory: this.inventory });
 				break;
 		}
 	}
@@ -166,6 +175,15 @@ class Instance {
 	}
 	clearDead() {
 		this.map.mobs = this.map.mobs.filter(mob => mob.hp > 0);
+	}
+	useItem(id) {
+		const item = this.inventory.find(i => i.id === id);
+		if (!item) return;
+		else if (item.name === 'potion') {
+			this.stats.hp = Math.min(this.stats.hp + 5, this.stats.maxhp);
+			this.inventory.splice(this.inventory.findIndex(i => i.id === id), 1);
+			this.broadcast('message', `used potion. you gain 5 hp.`);
+		}
 	}
 	moveAI() {
 		const p = this.getPlayer();
